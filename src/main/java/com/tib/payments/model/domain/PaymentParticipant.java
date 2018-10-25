@@ -6,6 +6,7 @@ public class PaymentParticipant {
     private String accountName;
     private String accountNumber;
     private String accountNumberCode;
+    private Integer accountType;
     private String address;
     private String bankId;
     private String bankIdCode;
@@ -67,12 +68,21 @@ public class PaymentParticipant {
         this.participantName = participantName;
     }
 
+    public Integer getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(Integer accountType) {
+        this.accountType = accountType;
+    }
+
     @Override
     public String toString() {
         return "PaymentParticipant{" +
             "accountName='" + accountName + '\'' +
             ", accountNumber='" + accountNumber + '\'' +
             ", accountNumberCode='" + accountNumberCode + '\'' +
+            ", accountType=" + accountType +
             ", address='" + address + '\'' +
             ", bankId='" + bankId + '\'' +
             ", bankIdCode='" + bankIdCode + '\'' +
@@ -92,6 +102,7 @@ public class PaymentParticipant {
         return Objects.equals(accountName, that.accountName) &&
             Objects.equals(accountNumber, that.accountNumber) &&
             Objects.equals(accountNumberCode, that.accountNumberCode) &&
+            Objects.equals(accountType, that.accountType) &&
             Objects.equals(address, that.address) &&
             Objects.equals(bankId, that.bankId) &&
             Objects.equals(bankIdCode, that.bankIdCode) &&
@@ -100,6 +111,6 @@ public class PaymentParticipant {
 
     @Override
     public int hashCode() {
-        return Objects.hash(accountName, accountNumber, accountNumberCode, address, bankId, bankIdCode, participantName);
+        return Objects.hash(accountName, accountNumber, accountNumberCode, accountType, address, bankId, bankIdCode, participantName);
     }
 }
