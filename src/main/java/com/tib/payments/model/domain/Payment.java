@@ -16,6 +16,7 @@ public class Payment {
     private String organisationId;
     private PaymentCharge paymentCharge;
     private Money amount;
+    private PaymentParticipant beneficiary;
     private PaymentParticipant debtor;
     private String endToEndReference;
     private ForeignExchange foreignExchange;
@@ -174,6 +175,14 @@ public class Payment {
         this.sponsor = sponsor;
     }
 
+    public PaymentParticipant getBeneficiary() {
+        return beneficiary;
+    }
+
+    public void setBeneficiary(PaymentParticipant beneficiary) {
+        this.beneficiary = beneficiary;
+    }
+
     @Override
     public String toString() {
         return "Payment{" +
@@ -182,6 +191,7 @@ public class Payment {
             ", organisationId='" + organisationId + '\'' +
             ", paymentCharge=" + paymentCharge +
             ", amount=" + amount +
+            ", beneficiary=" + beneficiary +
             ", debtor=" + debtor +
             ", endToEndReference='" + endToEndReference + '\'' +
             ", foreignExchange=" + foreignExchange +
@@ -212,6 +222,7 @@ public class Payment {
             Objects.equals(organisationId, payment.organisationId) &&
             Objects.equals(paymentCharge, payment.paymentCharge) &&
             Objects.equals(amount, payment.amount) &&
+            Objects.equals(beneficiary, payment.beneficiary) &&
             Objects.equals(debtor, payment.debtor) &&
             Objects.equals(endToEndReference, payment.endToEndReference) &&
             Objects.equals(foreignExchange, payment.foreignExchange) &&
@@ -230,8 +241,7 @@ public class Payment {
     @Override
     public int hashCode() {
         return Objects
-            .hash(id, version, organisationId, paymentCharge, amount, debtor, endToEndReference, foreignExchange, numericReference, paymentId,
-                purpose,
-                scheme, type, processingDate, reference, schemeSubType, schemeType, sponsor);
+            .hash(id, version, organisationId, paymentCharge, amount, beneficiary, debtor, endToEndReference, foreignExchange, numericReference,
+                paymentId, purpose, scheme, type, processingDate, reference, schemeSubType, schemeType, sponsor);
     }
 }
