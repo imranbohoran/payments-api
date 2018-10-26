@@ -1,10 +1,12 @@
-package com.tib.payments.model.view;
+package com.tib.payments.model.payload;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tib.payments.model.domain.ForeignExchange;
+import com.tib.payments.model.domain.Money;
 
 import java.math.BigDecimal;
+import java.util.Currency;
 
 public class ForeignExchangeView {
 
@@ -63,5 +65,12 @@ public class ForeignExchangeView {
     @JsonProperty("original_currency")
     private void setOriginalCurrency(String currency) {
         this.currency = currency;
+    }
+
+    @JsonIgnore
+    public ForeignExchange getnewForeignExchange() {
+        foreignExchange.setOriginalAmount(Money.moneyValue(amount, Currency.getInstance(currency)));
+
+        return foreignExchange;
     }
 }

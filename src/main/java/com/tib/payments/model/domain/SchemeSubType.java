@@ -12,4 +12,13 @@ public enum SchemeSubType {
     public String getName() {
         return name;
     }
+
+    public static SchemeSubType getSchemeSubTypeFor(String name) {
+        for (SchemeSubType schemeSubType: SchemeSubType.values()) {
+            if (schemeSubType.getName().equals(name)) {
+                return schemeSubType;
+            }
+        }
+        throw new RuntimeException("Unknown scheme sub type for name: "+ name);
+    }
 }

@@ -1,15 +1,21 @@
-package com.tib.payments.model.view;
+package com.tib.payments.model.payload;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tib.payments.model.domain.Payment;
 
-public class PaymentView {
+import java.util.UUID;
+
+public class PaymentPayload {
 
     @JsonIgnore
     private Payment payment;
 
-    public PaymentView(Payment payment) {
+    public PaymentPayload() {
+        this.payment = new Payment();
+    }
+
+    public PaymentPayload(Payment payment) {
         this.payment = payment;
         this.attributes = new PaymentAttributes(payment);
         this.type = "Payment";
@@ -33,6 +39,21 @@ public class PaymentView {
         return this.payment.getOrganisationId();
     }
 
+    @JsonProperty("organisation_id")
+    public void setOrganisationId(String organisationId) {
+        this.payment.setOrganisationId(organisationId);
+    }
+
+
     @JsonProperty("attributes")
     private PaymentAttributes attributes;
+
+    @JsonIgnore
+    public Payment createNewPayment() {
+        Payment newPayment = attributes.getNewPayment();
+        newPayment.setId(UUID.randomUUID().toString());
+        newPayment.setVersion(0);
+        newPayment.setOrganisationId(getOrganisationId());
+        return newPayment;
+    }
 }

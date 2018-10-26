@@ -1,4 +1,4 @@
-package com.tib.payments.model.view;
+package com.tib.payments.model.payload;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -82,6 +82,11 @@ public class ParticipantParty {
         return this.paymentParticipant.getBankIdCode();
     }
 
+    @JsonProperty("bank_id_code")
+    public void setBankIdCode(String bankIdCode) {
+        this.paymentParticipant.setBankIdCode(bankIdCode);
+    }
+
     @JsonProperty("name")
     public String getName() {
         return this.paymentParticipant.getParticipantName();
@@ -90,5 +95,10 @@ public class ParticipantParty {
     @JsonProperty("name")
     public void setName(String name) {
         this.paymentParticipant.setParticipantName(name);
+    }
+
+    @JsonIgnore
+    public PaymentParticipant getNewPaymentParticipant() {
+        return paymentParticipant;
     }
 }

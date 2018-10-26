@@ -15,4 +15,13 @@ public enum PaymentType {
     public String getName() {
         return name;
     }
+
+    public static PaymentType getPaymentTypeFor(String name) {
+        for(PaymentType type : PaymentType.values()) {
+            if (type.getName().equals(name)) {
+                return type;
+            }
+        }
+        throw new RuntimeException("Unknown payment type name: "+ name);
+    }
 }

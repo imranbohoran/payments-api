@@ -1,9 +1,11 @@
-package com.tib.payments.model.view;
+package com.tib.payments.model.payload;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tib.payments.model.domain.Money;
 import com.tib.payments.model.domain.PaymentCharge;
 
+import java.util.Currency;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -50,6 +52,7 @@ public class ChargesInformation {
         return this.paymentCharge.getReceiverCharge().display();
     }
 
+
     @JsonProperty("receiver_charges_currency")
     public String getReceiverChargeCurrency() {
         return this.paymentCharge.getReceiverCharge().getCurrency().getCurrencyCode();
@@ -73,6 +76,8 @@ public class ChargesInformation {
 
         private String amount;
         private String currencyCode;
+
+        public Charge() {}
 
         public Charge(String amount, String currencyCode) {
             this.amount = amount;
@@ -122,6 +127,19 @@ public class ChargesInformation {
         public int hashCode() {
             return Objects.hash(amount, currencyCode);
         }
+    }
+
+    @JsonIgnore
+    public PaymentCharge getNewPaymentCharge() {
+        paymentCharge.setReceiverCharge(
+            Money.moneyValue(receiverChargeAmount, Currency.getInstance(receiverChargeCurrency)));
+
+        paymentCharge.setSenderCharges(
+            senderCharges.stream()
+                .map(charge -> Money.moneyValue(charge.getAmount(), Currency.getInstance(charge.getCurrencyCode())))
+                .collect(Collectors.toList()));
+
+        return paymentCharge;
     }
 
 }
