@@ -28,9 +28,11 @@ import java.util.UUID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -236,4 +238,45 @@ class PaymentResourceTest {
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isNotFound());
     }
+
+    @Test
+    void shouldCreateNewPaymentForPutWhenNoPaymentExists() throws Exception {
+        String requestPayload = new String(Files.readAllBytes(Paths.get(
+            Objects.requireNonNull(PaymentResourceTest.class.getClassLoader().getResource("test-data/sample-create-payment.json")).toURI())));
+
+        Payment newPayment = mock(Payment.class);
+
+        when(paymentRepository.save(paymentArgumentCaptor.capture())).thenReturn(newPayment);
+        when(newPayment.getId()).thenAnswer((Answer<String>) invocation -> paymentArgumentCaptor.getValue().getId());
+
+        mockMvc.perform(put("/v1/api/payments")
+            .contentType(MediaType.APPLICATION_JSON_UTF8)
+            .content(requestPayload))
+            .andExpect(status().isCreated())
+            .andExpect(header().string("Location", "/v1/api/payments/" + newPayment.getId()))
+            .andExpect(jsonPath("$.paymentId").value(paymentArgumentCaptor.getValue().getId()));
+
+        assertThat(paymentArgumentCaptor.getValue().getAmount()).isEqualTo(Money.moneyValue("100.21", Currency.getInstance(Locale.UK)));
+    }
+
+    @Test
+    void shouldUpdatePaymentForPutWhenPaymentExists() throws Exception {
+        String requestPayload = new String(Files.readAllBytes(Paths.get(
+            Objects.requireNonNull(PaymentResourceTest.class.getClassLoader().getResource("test-data/sample-put-payment.json")).toURI())));
+
+        Payment existingPayment = mock(Payment.class);
+        Payment updatedPayment = mock(Payment.class);
+
+        when(paymentRepository.findById("4ee3a8d8-ca7b-4290-a52c-dd5b6165ec43")).thenReturn(Optional.of(existingPayment));
+        when(existingPayment.getId()).thenReturn("4ee3a8d8-ca7b-4290-a52c-dd5b6165ec43");
+        when(existingPayment.updatePayment(paymentArgumentCaptor.capture())).thenReturn(updatedPayment);
+
+        mockMvc.perform(put("/v1/api/payments")
+            .contentType(MediaType.APPLICATION_JSON_UTF8)
+            .content(requestPayload))
+            .andExpect(status().isNoContent());
+
+        verify(paymentRepository).save(updatedPayment);
+    }
+
 }

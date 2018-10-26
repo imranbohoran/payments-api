@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,14 +31,9 @@ public class PaymentResource {
 
     @PostMapping(value = "/v1/api/payments")
     public ResponseEntity<String> createPayment(@RequestBody PaymentPayload paymentCreatePayload) {
-        Payment createdPayment = paymentRepository.save(paymentCreatePayload.createNewPayment());
-        ObjectNode paymentIdNode = FACTORY.objectNode();
-        paymentIdNode.put("paymentId", createdPayment.getId());
-
-        return ResponseEntity
-            .created(URI.create("/v1/api/payments/" + createdPayment.getId()))
-            .body(paymentIdNode.toString());
+        return createNewPayment(paymentCreatePayload);
     }
+
 
     @GetMapping(value = "/v1/api/payments")
     public ResponseEntity<List<PaymentPayload>> getPayments() {
@@ -60,4 +56,29 @@ public class PaymentResource {
 
         return ResponseEntity.notFound().build();
     }
+
+    @PutMapping(value = "/v1/api/payments")
+    public ResponseEntity updatePayment(@RequestBody PaymentPayload paymentUpdatePayload) {
+        Optional<Payment> payment = paymentRepository.findById(paymentUpdatePayload.getId());
+
+        if(payment.isPresent()) {
+            Payment paymentToSave = payment.get();
+            paymentRepository.save(paymentToSave.updatePayment(paymentUpdatePayload.getMappedPayment()));
+
+            return ResponseEntity.noContent().build();
+        }
+
+        return createNewPayment(paymentUpdatePayload);
+    }
+
+    private ResponseEntity<String> createNewPayment(@RequestBody PaymentPayload paymentCreatePayload) {
+        Payment createdPayment = paymentRepository.save(paymentCreatePayload.createNewPayment());
+        ObjectNode paymentIdNode = FACTORY.objectNode();
+        paymentIdNode.put("paymentId", createdPayment.getId());
+
+        return ResponseEntity
+            .created(URI.create("/v1/api/payments/" + createdPayment.getId()))
+            .body(paymentIdNode.toString());
+    }
+
 }

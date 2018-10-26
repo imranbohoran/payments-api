@@ -29,6 +29,11 @@ public class PaymentPayload {
         return this.payment.getId();
     }
 
+    @JsonProperty("id")
+    public void setId(String id) {
+        this.payment.setId(id);
+    }
+
     @JsonProperty("version")
     public Integer getVersion() {
         return this.payment.getVersion();
@@ -55,5 +60,10 @@ public class PaymentPayload {
         newPayment.setVersion(0);
         newPayment.setOrganisationId(getOrganisationId());
         return newPayment;
+    }
+
+    @JsonIgnore
+    public Payment getMappedPayment() {
+        return this.payment;
     }
 }
