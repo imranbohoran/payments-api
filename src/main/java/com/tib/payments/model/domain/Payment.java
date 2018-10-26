@@ -6,6 +6,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import static java.lang.String.format;
+
 @Document(collection = "payments")
 public class Payment {
 
@@ -243,5 +245,18 @@ public class Payment {
         return Objects
             .hash(id, version, organisationId, paymentCharge, amount, beneficiary, debtor, endToEndReference, foreignExchange, numericReference,
                 paymentId, purpose, scheme, type, processingDate, reference, schemeSubType, schemeType, sponsor);
+    }
+
+
+    public Payment updatePayment(Payment payment) {
+
+        if (this.id.equals(payment.getId())) {
+            payment.setVersion(this.getVersion() + 1);
+            return payment;
+        }
+
+        throw new IllegalArgumentException(
+            format("Incorrect payment attempted to be updated. Payment with ID %s, attempted to be updated by Payment with Id %s",
+                this.id, payment.getId()));
     }
 }
