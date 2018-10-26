@@ -8,12 +8,14 @@ import com.tib.payments.persistence.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -44,5 +46,18 @@ public class PaymentResource {
 
         List<PaymentPayload> paymentPayloads = allPayments.stream().map(PaymentPayload::new).collect(Collectors.toList());
         return ResponseEntity.ok(paymentPayloads);
+    }
+
+    @GetMapping(value = "/v1/api/payments/{payment_id}")
+    public ResponseEntity<PaymentPayload> getPayment(@PathVariable("payment_id") String paymentId) {
+
+        Optional<PaymentPayload> paymentPayload = paymentRepository.findById(paymentId)
+            .map(PaymentPayload::new);
+
+        if (paymentPayload.isPresent()) {
+            return ResponseEntity.ok(paymentPayload.get());
+        }
+
+        return ResponseEntity.notFound().build();
     }
 }

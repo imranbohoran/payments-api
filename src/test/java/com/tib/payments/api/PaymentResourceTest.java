@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.Currency;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import static java.util.Arrays.asList;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -61,6 +63,7 @@ class PaymentResourceTest {
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .content(requestPayload))
             .andExpect(status().isCreated())
+            .andExpect(header().string("Location", "/v1/api/payments/" + newPayment.getId()))
             .andExpect(jsonPath("$.paymentId").value(paymentArgumentCaptor.getValue().getId()));
 
         assertThat(paymentArgumentCaptor.getValue().getAmount()).isEqualTo(Money.moneyValue("100.21", Currency.getInstance(Locale.UK)));
@@ -168,5 +171,69 @@ class PaymentResourceTest {
             .andExpect(jsonPath("$.[1].attributes.sponsor_party.bank_id_code").value("GBDSC"));
     }
 
+    @Test
+    void shouldReturnPaymentForId() throws Exception {
+        Payment payment = TestData.createNewPayment(UUID.randomUUID().toString());
 
+        when(paymentRepository.findById(payment.getId())).thenReturn(Optional.of(payment));
+
+        mockMvc.perform(get("/v1/api/payments/" + payment.getId())
+            .contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.type").value("Payment"))
+            .andExpect(jsonPath("$.id").value(payment.getId()))
+            .andExpect(jsonPath("$.version").value(0))
+            .andExpect(jsonPath("$.organisation_id").value("743d5b63-8e6f-432e-a8fa-c5d8d2ee5fcb"))
+            .andExpect(jsonPath("$.attributes.amount").value("100.21"))
+            .andExpect(jsonPath("$.attributes.currency").value("GBP"))
+            .andExpect(jsonPath("$.attributes.end_to_end_reference").value("Wil piano Jan"))
+            .andExpect(jsonPath("$.attributes.numeric_reference").value(1002001))
+            .andExpect(jsonPath("$.attributes.payment_id").value("123456789012345678"))
+            .andExpect(jsonPath("$.attributes.payment_purpose").value("Paying for goods/services"))
+            .andExpect(jsonPath("$.attributes.payment_scheme").value("FPS"))
+            .andExpect(jsonPath("$.attributes.payment_type").value("Credit"))
+            .andExpect(jsonPath("$.attributes.processing_date").value("2017-01-18"))
+            .andExpect(jsonPath("$.attributes.reference").value("Payment for Em's piano lessons"))
+            .andExpect(jsonPath("$.attributes.scheme_payment_sub_type").value("InternetBanking"))
+            .andExpect(jsonPath("$.attributes.scheme_payment_type").value("ImmediatePayment"))
+            .andExpect(jsonPath("$.attributes.beneficiary_party.account_name").value("W Owens"))
+            .andExpect(jsonPath("$.attributes.beneficiary_party.account_number").value("31926819"))
+            .andExpect(jsonPath("$.attributes.beneficiary_party.account_number_code").value("BBAN"))
+            .andExpect(jsonPath("$.attributes.beneficiary_party.account_type").value(0))
+            .andExpect(jsonPath("$.attributes.beneficiary_party.address").value("1 The Beneficiary Localtown SE2"))
+            .andExpect(jsonPath("$.attributes.beneficiary_party.bank_id").value("403000"))
+            .andExpect(jsonPath("$.attributes.beneficiary_party.bank_id_code").value("GBDSC"))
+            .andExpect(jsonPath("$.attributes.beneficiary_party.name").value("Wilfred Jeremiah Owens"))
+            .andExpect(jsonPath("$.attributes.charges_information.bearer_code").value("SHAR"))
+            .andExpect(jsonPath("$.attributes.charges_information.sender_charges.[0].amount").value("5.00"))
+            .andExpect(jsonPath("$.attributes.charges_information.sender_charges.[0].currency").value("GBP"))
+            .andExpect(jsonPath("$.attributes.charges_information.sender_charges.[1].amount").value("10.00"))
+            .andExpect(jsonPath("$.attributes.charges_information.sender_charges.[1].currency").value("USD"))
+            .andExpect(jsonPath("$.attributes.charges_information.receiver_charges_amount").value("1.00"))
+            .andExpect(jsonPath("$.attributes.charges_information.receiver_charges_currency").value("USD"))
+            .andExpect(jsonPath("$.attributes.debtor_party.account_name").value("EJ Brown Black"))
+            .andExpect(jsonPath("$.attributes.debtor_party.account_number").value("GB29XABC10161234567801"))
+            .andExpect(jsonPath("$.attributes.debtor_party.account_number_code").value("IBAN"))
+            .andExpect(jsonPath("$.attributes.debtor_party.address").value("10 Debtor Crescent Sourcetown NE1"))
+            .andExpect(jsonPath("$.attributes.debtor_party.bank_id").value("203301"))
+            .andExpect(jsonPath("$.attributes.debtor_party.bank_id_code").value("GBDSC"))
+            .andExpect(jsonPath("$.attributes.debtor_party.name").value("Emelia Jane Brown"))
+            .andExpect(jsonPath("$.attributes.fx.contract_reference").value("FX123"))
+            .andExpect(jsonPath("$.attributes.fx.exchange_rate").value("2.00000"))
+            .andExpect(jsonPath("$.attributes.fx.original_amount").value("200.42"))
+            .andExpect(jsonPath("$.attributes.fx.original_currency").value("USD"))
+            .andExpect(jsonPath("$.attributes.sponsor_party.account_number").value("56781234"))
+            .andExpect(jsonPath("$.attributes.sponsor_party.bank_id").value("123123"))
+            .andExpect(jsonPath("$.attributes.sponsor_party.bank_id_code").value("GBDSC"));
+    }
+
+    @Test
+    void shouldReturn404WheResourceIsNotFound() throws Exception {
+        String paymentId = UUID.randomUUID().toString();
+        when(paymentRepository.findById(paymentId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/v1/api/payments/" + paymentId)
+            .contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(status().isNotFound());
+    }
 }
