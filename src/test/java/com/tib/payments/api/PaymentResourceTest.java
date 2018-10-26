@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -277,6 +278,18 @@ class PaymentResourceTest {
             .andExpect(status().isNoContent());
 
         verify(paymentRepository).save(updatedPayment);
+    }
+
+    @Test
+    void shouldDeletePaymentForDeleteOperation() throws Exception {
+
+        String paymentId = UUID.randomUUID().toString();
+
+        mockMvc.perform(delete("/v1/api/payments/" + paymentId)
+            .contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(status().isNoContent());
+
+        verify(paymentRepository).deleteById(paymentId);
     }
 
 }

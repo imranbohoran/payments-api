@@ -7,6 +7,7 @@ import com.tib.payments.model.payload.PaymentPayload;
 import com.tib.payments.persistence.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -69,6 +70,13 @@ public class PaymentResource {
         }
 
         return createNewPayment(paymentUpdatePayload);
+    }
+
+    @DeleteMapping(value = "/v1/api/payments/{payment_id}")
+    public ResponseEntity deletePayment(@PathVariable("payment_id") String paymentId) {
+        paymentRepository.deleteById(paymentId);
+
+        return ResponseEntity.noContent().build();
     }
 
     private ResponseEntity<String> createNewPayment(@RequestBody PaymentPayload paymentCreatePayload) {
