@@ -49,13 +49,21 @@ public class ChargesInformation {
 
     @JsonProperty("receiver_charges_amount")
     public String getReceiverChargeAmount() {
-        return this.paymentCharge.getReceiverCharge().display();
+        if (this.paymentCharge.getReceiverCharge() != null) {
+            return this.paymentCharge.getReceiverCharge().display();
+        } else {
+            return receiverChargeAmount;
+        }
     }
 
 
     @JsonProperty("receiver_charges_currency")
     public String getReceiverChargeCurrency() {
-        return this.paymentCharge.getReceiverCharge().getCurrency().getCurrencyCode();
+        if (this.paymentCharge.getReceiverCharge() != null) {
+            return this.paymentCharge.getReceiverCharge().getCurrency().getCurrencyCode();
+        } else {
+            return receiverChargeCurrency;
+        }
     }
 
     public void setSenderCharges(List<Charge> senderCharges) {

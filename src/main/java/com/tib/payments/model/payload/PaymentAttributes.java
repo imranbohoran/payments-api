@@ -41,7 +41,11 @@ public class PaymentAttributes {
 
     @JsonProperty("amount")
     public String getAmount() {
-        return this.payment.getAmount().display();
+        if(this.payment.getAmount() != null) {
+            return this.payment.getAmount().display();
+        } else {
+            return this.amount;
+        }
     }
 
     @JsonProperty("amount")
@@ -58,7 +62,11 @@ public class PaymentAttributes {
 
     @JsonProperty("currency")
     public String getCurrency() {
-        return this.payment.getAmount().getCurrency().getCurrencyCode();
+        if (this.payment.getAmount() != null) {
+            return this.payment.getAmount().getCurrency().getCurrencyCode();
+        } else  {
+            return this.currency;
+        }
     }
 
     @JsonProperty("currency")

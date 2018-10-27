@@ -64,6 +64,10 @@ public class PaymentPayload {
 
     @JsonIgnore
     public Payment getMappedPayment() {
-        return this.payment;
+        Payment newPayment = attributes.getNewPayment();
+        newPayment.setId(getId());
+        newPayment.setVersion(getVersion());
+        newPayment.setOrganisationId(getOrganisationId());
+        return newPayment;
     }
 }

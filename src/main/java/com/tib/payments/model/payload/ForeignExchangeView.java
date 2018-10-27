@@ -39,12 +39,20 @@ public class ForeignExchangeView {
 
     @JsonProperty("original_amount")
     private String getOriginalAmount() {
-        return this.foreignExchange.getOriginalAmount().display();
+        if (this.foreignExchange.getOriginalAmount() != null) {
+            return this.foreignExchange.getOriginalAmount().display();
+        } else {
+            return amount;
+        }
     }
 
     @JsonProperty("original_currency")
     private String getOriginalCurrency() {
-        return this.foreignExchange.getOriginalAmount().getCurrency().getCurrencyCode();
+        if (this.foreignExchange.getOriginalAmount() != null) {
+            return this.foreignExchange.getOriginalAmount().getCurrency().getCurrencyCode();
+        } else {
+            return currency;
+        }
     }
 
     @JsonProperty("contract_reference")
