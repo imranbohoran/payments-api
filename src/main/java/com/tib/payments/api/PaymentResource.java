@@ -6,6 +6,7 @@ import com.tib.payments.model.domain.Payment;
 import com.tib.payments.model.payload.PaymentPayload;
 import com.tib.payments.persistence.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.tib.payments.api.ApiPaths.PAYMENTS_PATH_SINGLE_RESOURCE;
+import static com.tib.payments.api.ApiPaths.PAYMENTS_RESOURCE_PATH;
+import static com.tib.payments.model.payload.PaymentPayload.PATH_VARIABLE_PAYMENT_ID;
+import static com.tib.payments.model.payload.PaymentPayload.RESPONSE_PAYLOAD_PAYMENT_ID;
+
 @RestController
 public class PaymentResource {
 
@@ -27,16 +33,21 @@ public class PaymentResource {
 
     private final PaymentRepository paymentRepository;
 
-    @Autowired
-    public PaymentResource(PaymentRepository paymentRepository) {this.paymentRepository = paymentRepository;}
+    private final String applicationDomain;
 
-    @PostMapping(value = "/v1/api/payments")
+    @Autowired
+    public PaymentResource(@Value("${application.domain}") String applicationDomain, PaymentRepository paymentRepository) {
+        this.paymentRepository = paymentRepository;
+        this.applicationDomain = applicationDomain;
+    }
+
+    @PostMapping(value = PAYMENTS_RESOURCE_PATH)
     public ResponseEntity<String> createPayment(@RequestBody PaymentPayload paymentCreatePayload) {
         return createNewPayment(paymentCreatePayload);
     }
 
 
-    @GetMapping(value = "/v1/api/payments")
+    @GetMapping(value = PAYMENTS_RESOURCE_PATH)
     public ResponseEntity<List<PaymentPayload>> getPayments() {
 
         List<Payment> allPayments = paymentRepository.findAll();
@@ -45,8 +56,8 @@ public class PaymentResource {
         return ResponseEntity.ok(paymentPayloads);
     }
 
-    @GetMapping(value = "/v1/api/payments/{payment_id}")
-    public ResponseEntity<PaymentPayload> getPayment(@PathVariable("payment_id") String paymentId) {
+    @GetMapping(value = PAYMENTS_PATH_SINGLE_RESOURCE)
+    public ResponseEntity<PaymentPayload> getPayment(@PathVariable(PATH_VARIABLE_PAYMENT_ID) String paymentId) {
 
         Optional<PaymentPayload> paymentPayload = paymentRepository.findById(paymentId)
             .map(PaymentPayload::new);
@@ -58,7 +69,7 @@ public class PaymentResource {
         return ResponseEntity.notFound().build();
     }
 
-    @PutMapping(value = "/v1/api/payments")
+    @PutMapping(value = PAYMENTS_RESOURCE_PATH)
     public ResponseEntity updatePayment(@RequestBody PaymentPayload paymentUpdatePayload) {
         Optional<Payment> payment = paymentRepository.findById(paymentUpdatePayload.getId());
 
@@ -72,8 +83,8 @@ public class PaymentResource {
         return createNewPayment(paymentUpdatePayload);
     }
 
-    @DeleteMapping(value = "/v1/api/payments/{payment_id}")
-    public ResponseEntity deletePayment(@PathVariable("payment_id") String paymentId) {
+    @DeleteMapping(value = PAYMENTS_PATH_SINGLE_RESOURCE)
+    public ResponseEntity deletePayment(@PathVariable(PATH_VARIABLE_PAYMENT_ID) String paymentId) {
         paymentRepository.deleteById(paymentId);
 
         return ResponseEntity.noContent().build();
@@ -82,10 +93,10 @@ public class PaymentResource {
     private ResponseEntity<String> createNewPayment(@RequestBody PaymentPayload paymentCreatePayload) {
         Payment createdPayment = paymentRepository.save(paymentCreatePayload.createNewPayment());
         ObjectNode paymentIdNode = FACTORY.objectNode();
-        paymentIdNode.put("paymentId", createdPayment.getId());
+        paymentIdNode.put(RESPONSE_PAYLOAD_PAYMENT_ID, createdPayment.getId());
 
         return ResponseEntity
-            .created(URI.create("/v1/api/payments/" + createdPayment.getId()))
+            .created(URI.create(applicationDomain + PAYMENTS_RESOURCE_PATH + createdPayment.getId()))
             .body(paymentIdNode.toString());
     }
 

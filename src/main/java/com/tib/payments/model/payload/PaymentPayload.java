@@ -8,6 +8,9 @@ import java.util.UUID;
 
 public class PaymentPayload {
 
+    public static final String RESPONSE_PAYLOAD_PAYMENT_ID = "paymentId";
+    public static final String PATH_VARIABLE_PAYMENT_ID = "payment_id";
+
     @JsonIgnore
     private Payment payment;
 

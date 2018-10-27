@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -23,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.tib.payments.api.ApiPaths.PAYMENTS_RESOURCE_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -61,7 +61,7 @@ class PaymentsIntegrationTest {
             Objects.requireNonNull(PaymentsIntegrationTest.class.getClassLoader().getResource("test-data/sample-create-payment-2.json")).toURI())));
 
         // POST- Creation Payment
-        String firstPaymentPostResponse = mockMvc.perform(post("/v1/api/payments")
+        String firstPaymentPostResponse = mockMvc.perform(post(PAYMENTS_RESOURCE_PATH)
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .content(requestPayloadFirstPayment))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
@@ -73,7 +73,7 @@ class PaymentsIntegrationTest {
         assertThat(paymentId).isNotNull();
 
         // GET - Get the created payment
-        String firstPayment = mockMvc.perform(get("/v1/api/payments/" + paymentId)
+        String firstPayment = mockMvc.perform(get(PAYMENTS_RESOURCE_PATH+ "/" + paymentId)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.type").value("Payment"))
@@ -85,7 +85,7 @@ class PaymentsIntegrationTest {
             .andReturn().getResponse().getContentAsString();
 
         // POST - Create second payment
-        String secondPaymentPostResponse = mockMvc.perform(post("/v1/api/payments")
+        String secondPaymentPostResponse = mockMvc.perform(post(PAYMENTS_RESOURCE_PATH)
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .content(requestPayloadSecondPayment))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
@@ -95,7 +95,7 @@ class PaymentsIntegrationTest {
         String paymentIdSecondPayment = secondPaymentCreateResponse.get("paymentId");
 
         // GET ALL
-        mockMvc.perform(get("/v1/api/payments")
+        mockMvc.perform(get(PAYMENTS_RESOURCE_PATH)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.[0].type").value("Payment"))
@@ -117,33 +117,33 @@ class PaymentsIntegrationTest {
         paymentPayload.setOrganisationId(firstPaymentNewOrganisationId);
 
         String updatedSecondPayment = objectMapper.writeValueAsString(paymentPayload);
-        mockMvc.perform(put("/v1/api/payments")
+        mockMvc.perform(put(PAYMENTS_RESOURCE_PATH)
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .content(updatedSecondPayment))
             .andExpect(status().isNoContent());
 
         // GET - the payment that was modified
-        mockMvc.perform(get("/v1/api/payments/" + paymentId)
+        mockMvc.perform(get(PAYMENTS_RESOURCE_PATH + "/" + paymentId)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.organisation_id").value(firstPaymentNewOrganisationId))
             .andReturn().getResponse().getContentAsString();
 
         // DELETE - payments
-        mockMvc.perform(delete("/v1/api/payments/" + paymentId)
+        mockMvc.perform(delete(PAYMENTS_RESOURCE_PATH + "/" + paymentId)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isNoContent());
 
-        mockMvc.perform(delete("/v1/api/payments/" + paymentIdSecondPayment)
+        mockMvc.perform(delete(PAYMENTS_RESOURCE_PATH + "/" + paymentIdSecondPayment)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isNoContent());
 
         // GET - deleted payments
-        mockMvc.perform(get("/v1/api/payments/" + paymentId)
+        mockMvc.perform(get(PAYMENTS_RESOURCE_PATH + "/" + paymentId)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isNotFound());
 
-        mockMvc.perform(get("/v1/api/payments/" + paymentIdSecondPayment)
+        mockMvc.perform(get(PAYMENTS_RESOURCE_PATH + "/" + paymentIdSecondPayment)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isNotFound());
 

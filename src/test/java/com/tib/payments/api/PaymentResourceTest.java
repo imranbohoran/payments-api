@@ -10,6 +10,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
@@ -25,6 +26,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.tib.payments.api.ApiPaths.PAYMENTS_RESOURCE_PATH;
+import static com.tib.payments.model.payload.PaymentPayload.RESPONSE_PAYLOAD_PAYMENT_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -52,6 +55,9 @@ class PaymentResourceTest {
     @Captor
     ArgumentCaptor<Payment> paymentArgumentCaptor;
 
+    @Value("${application.domain}")
+    String applicationDomain;
+
     @Test
     void shouldCreateNewPayment() throws Exception {
         String requestPayload = new String(Files.readAllBytes(Paths.get(
@@ -62,12 +68,12 @@ class PaymentResourceTest {
         when(paymentRepository.save(paymentArgumentCaptor.capture())).thenReturn(newPayment);
         when(newPayment.getId()).thenAnswer((Answer<String>) invocation -> paymentArgumentCaptor.getValue().getId());
 
-        mockMvc.perform(post("/v1/api/payments")
+        mockMvc.perform(post(PAYMENTS_RESOURCE_PATH)
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .content(requestPayload))
             .andExpect(status().isCreated())
-            .andExpect(header().string("Location", "/v1/api/payments/" + newPayment.getId()))
-            .andExpect(jsonPath("$.paymentId").value(paymentArgumentCaptor.getValue().getId()));
+            .andExpect(header().string("Location", applicationDomain + PAYMENTS_RESOURCE_PATH + newPayment.getId()))
+            .andExpect(jsonPath("$." + RESPONSE_PAYLOAD_PAYMENT_ID).value(paymentArgumentCaptor.getValue().getId()));
 
         assertThat(paymentArgumentCaptor.getValue().getAmount()).isEqualTo(Money.moneyValue("100.21", Currency.getInstance(Locale.UK)));
     }
@@ -79,7 +85,7 @@ class PaymentResourceTest {
 
         when(paymentRepository.findAll()).thenReturn(asList(payment1, payment2));
 
-        mockMvc.perform(get("/v1/api/payments")
+        mockMvc.perform(get(PAYMENTS_RESOURCE_PATH)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.[0].type").value("Payment"))
@@ -180,7 +186,7 @@ class PaymentResourceTest {
 
         when(paymentRepository.findById(payment.getId())).thenReturn(Optional.of(payment));
 
-        mockMvc.perform(get("/v1/api/payments/" + payment.getId())
+        mockMvc.perform(get(PAYMENTS_RESOURCE_PATH + "/" + payment.getId())
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.type").value("Payment"))
@@ -235,7 +241,7 @@ class PaymentResourceTest {
         String paymentId = UUID.randomUUID().toString();
         when(paymentRepository.findById(paymentId)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/v1/api/payments/" + paymentId)
+        mockMvc.perform(get(RESPONSE_PAYLOAD_PAYMENT_ID + "/" + paymentId)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isNotFound());
     }
@@ -250,12 +256,12 @@ class PaymentResourceTest {
         when(paymentRepository.save(paymentArgumentCaptor.capture())).thenReturn(newPayment);
         when(newPayment.getId()).thenAnswer((Answer<String>) invocation -> paymentArgumentCaptor.getValue().getId());
 
-        mockMvc.perform(put("/v1/api/payments")
+        mockMvc.perform(put(PAYMENTS_RESOURCE_PATH)
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .content(requestPayload))
             .andExpect(status().isCreated())
-            .andExpect(header().string("Location", "/v1/api/payments/" + newPayment.getId()))
-            .andExpect(jsonPath("$.paymentId").value(paymentArgumentCaptor.getValue().getId()));
+            .andExpect(header().string("Location", applicationDomain + PAYMENTS_RESOURCE_PATH + newPayment.getId()))
+            .andExpect(jsonPath("$." + RESPONSE_PAYLOAD_PAYMENT_ID).value(paymentArgumentCaptor.getValue().getId()));
 
         assertThat(paymentArgumentCaptor.getValue().getAmount()).isEqualTo(Money.moneyValue("100.21", Currency.getInstance(Locale.UK)));
     }
@@ -272,7 +278,7 @@ class PaymentResourceTest {
         when(existingPayment.getId()).thenReturn("4ee3a8d8-ca7b-4290-a52c-dd5b6165ec43");
         when(existingPayment.updatePayment(paymentArgumentCaptor.capture())).thenReturn(updatedPayment);
 
-        mockMvc.perform(put("/v1/api/payments")
+        mockMvc.perform(put(PAYMENTS_RESOURCE_PATH)
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .content(requestPayload))
             .andExpect(status().isNoContent());
@@ -285,7 +291,7 @@ class PaymentResourceTest {
 
         String paymentId = UUID.randomUUID().toString();
 
-        mockMvc.perform(delete("/v1/api/payments/" + paymentId)
+        mockMvc.perform(delete(PAYMENTS_RESOURCE_PATH + "/" + paymentId)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isNoContent());
 
