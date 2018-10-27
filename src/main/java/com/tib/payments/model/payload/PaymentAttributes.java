@@ -35,7 +35,7 @@ public class PaymentAttributes {
         this.beneficiaryParty = new ParticipantParty(payment.getBeneficiary());
         this.debtorParty = new ParticipantParty(payment.getDebtor());
         this.chargesInformation = new ChargesInformation(payment.getPaymentCharge());
-        this.foreignExchangeView = new ForeignExchangeView(payment.getForeignExchange());
+        this.foreignExchangeView = new ForeignExchangePayload(payment.getForeignExchange());
         this.sponsorParty = new SponsorParty(payment.getSponsor());
     }
 
@@ -88,7 +88,7 @@ public class PaymentAttributes {
     }
 
     @JsonProperty("fx")
-    private ForeignExchangeView foreignExchangeView;
+    private ForeignExchangePayload foreignExchangeView;
 
     @JsonProperty("numeric_reference")
     public Long getNumericReference() {

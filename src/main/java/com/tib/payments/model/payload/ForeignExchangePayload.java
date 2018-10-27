@@ -8,7 +8,7 @@ import com.tib.payments.model.domain.Money;
 import java.math.BigDecimal;
 import java.util.Currency;
 
-public class ForeignExchangeView {
+public class ForeignExchangePayload {
 
     @JsonIgnore
     private ForeignExchange foreignExchange;
@@ -19,11 +19,11 @@ public class ForeignExchangeView {
     @JsonIgnore
     private String currency;
 
-    public ForeignExchangeView() {
+    public ForeignExchangePayload() {
         this.foreignExchange = new ForeignExchange();
     }
 
-    public ForeignExchangeView(ForeignExchange foreignExchange) {
+    public ForeignExchangePayload(ForeignExchange foreignExchange) {
         this.foreignExchange = foreignExchange;
     }
 
