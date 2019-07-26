@@ -2,6 +2,8 @@ package com.tib.payments.api;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.tib.payments.model.actions.CreatePayment;
+import com.tib.payments.model.actions.UpdatePayment;
 import com.tib.payments.model.domain.Payment;
 import com.tib.payments.model.payload.PaymentPayload;
 import com.tib.payments.persistence.PaymentRepository;
@@ -33,12 +35,18 @@ public class PaymentResource {
 
     private final PaymentRepository paymentRepository;
 
+    private final CreatePayment createPayment;
+
+    private final UpdatePayment updatePayment;
+
     private final String applicationDomain;
 
     @Autowired
-    public PaymentResource(@Value("${application.domain}") String applicationDomain, PaymentRepository paymentRepository) {
+    public PaymentResource(@Value("${application.domain}") String applicationDomain, PaymentRepository paymentRepository, CreatePayment createPayment, UpdatePayment updatePayment) {
         this.paymentRepository = paymentRepository;
         this.applicationDomain = applicationDomain;
+        this.createPayment = createPayment;
+        this.updatePayment = updatePayment;
     }
 
     @PostMapping(value = PAYMENTS_RESOURCE_PATH)
@@ -75,7 +83,7 @@ public class PaymentResource {
 
         if(payment.isPresent()) {
             Payment paymentToSave = payment.get();
-            paymentRepository.save(paymentToSave.updatePayment(paymentUpdatePayload.getMappedPayment()));
+            updatePayment.execute(paymentToSave.updatePayment(paymentUpdatePayload.getMappedPayment()));
 
             return ResponseEntity.noContent().build();
         }
@@ -91,7 +99,8 @@ public class PaymentResource {
     }
 
     private ResponseEntity<String> createNewPayment(@RequestBody PaymentPayload paymentCreatePayload) {
-        Payment createdPayment = paymentRepository.save(paymentCreatePayload.createNewPayment());
+        Payment createdPayment = createPayment.execute(paymentCreatePayload.createNewPayment());
+
         ObjectNode paymentIdNode = FACTORY.objectNode();
         paymentIdNode.put(RESPONSE_PAYLOAD_PAYMENT_ID, createdPayment.getId());
 

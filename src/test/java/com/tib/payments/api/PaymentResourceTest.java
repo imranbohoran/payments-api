@@ -1,6 +1,8 @@
 package com.tib.payments.api;
 
 import com.tib.payments.TestData;
+import com.tib.payments.model.actions.CreatePayment;
+import com.tib.payments.model.actions.UpdatePayment;
 import com.tib.payments.model.domain.Money;
 import com.tib.payments.model.domain.Payment;
 import com.tib.payments.persistence.PaymentRepository;
@@ -52,6 +54,12 @@ class PaymentResourceTest {
     @MockBean
     PaymentRepository paymentRepository;
 
+    @MockBean
+    CreatePayment createPayment;
+
+    @MockBean
+    UpdatePayment updatePayment;
+
     @Captor
     ArgumentCaptor<Payment> paymentArgumentCaptor;
 
@@ -65,7 +73,8 @@ class PaymentResourceTest {
 
         Payment newPayment = mock(Payment.class);
 
-        when(paymentRepository.save(paymentArgumentCaptor.capture())).thenReturn(newPayment);
+//        when(paymentRepository.save(paymentArgumentCaptor.capture())).thenReturn(newPayment);
+        when(createPayment.execute(paymentArgumentCaptor.capture())).thenReturn(newPayment);
         when(newPayment.getId()).thenAnswer((Answer<String>) invocation -> paymentArgumentCaptor.getValue().getId());
 
         mockMvc.perform(post(PAYMENTS_RESOURCE_PATH)
@@ -253,7 +262,8 @@ class PaymentResourceTest {
 
         Payment newPayment = mock(Payment.class);
 
-        when(paymentRepository.save(paymentArgumentCaptor.capture())).thenReturn(newPayment);
+//        when(paymentRepository.save(paymentArgumentCaptor.capture())).thenReturn(newPayment);
+        when(createPayment.execute(paymentArgumentCaptor.capture())).thenReturn(newPayment);
         when(newPayment.getId()).thenAnswer((Answer<String>) invocation -> paymentArgumentCaptor.getValue().getId());
 
         mockMvc.perform(put(PAYMENTS_RESOURCE_PATH)
@@ -283,7 +293,8 @@ class PaymentResourceTest {
             .content(requestPayload))
             .andExpect(status().isNoContent());
 
-        verify(paymentRepository).save(updatedPayment);
+//        verify(paymentRepository).save(updatedPayment);
+        verify(updatePayment).execute(updatedPayment);
     }
 
     @Test
