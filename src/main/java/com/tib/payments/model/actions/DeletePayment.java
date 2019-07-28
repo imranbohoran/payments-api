@@ -1,7 +1,6 @@
 package com.tib.payments.model.actions;
 
 import com.tib.payments.model.domain.Payment;
-import com.tib.payments.model.payload.PaymentPayload;
 import com.tib.payments.persistence.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,20 +8,20 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-public class UpdatePayment {
+public class DeletePayment {
 
     private final PaymentRepository paymentRepository;
 
     @Autowired
-    public UpdatePayment(PaymentRepository paymentRepository) {
+    public DeletePayment(PaymentRepository paymentRepository) {
         this.paymentRepository = paymentRepository;
     }
 
-    public void execute(PaymentPayload paymentUpdatePayload) {
-        Optional<Payment> persistedPayment = paymentRepository.findById(paymentUpdatePayload.getId());
+    public void execute(String paymentId) {
+        Optional<Payment> payment = paymentRepository.findById(paymentId);
 
-        if (persistedPayment.isPresent()) {
-            paymentRepository.save(persistedPayment.get().updatePayment(paymentUpdatePayload.getMappedPayment()));
+        if (payment.isPresent()) {
+            paymentRepository.delete(payment.get());
         } else {
             throw new IllegalArgumentException();
         }

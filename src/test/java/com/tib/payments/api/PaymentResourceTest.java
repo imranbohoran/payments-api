@@ -2,9 +2,12 @@ package com.tib.payments.api;
 
 import com.tib.payments.TestData;
 import com.tib.payments.model.actions.CreatePayment;
+import com.tib.payments.model.actions.DeletePayment;
+import com.tib.payments.model.actions.GetPayment;
 import com.tib.payments.model.actions.UpdatePayment;
 import com.tib.payments.model.domain.Money;
 import com.tib.payments.model.domain.Payment;
+import com.tib.payments.model.payload.PaymentPayload;
 import com.tib.payments.persistence.PaymentRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,13 +28,14 @@ import java.nio.file.Paths;
 import java.util.Currency;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 import static com.tib.payments.api.ApiPaths.PAYMENTS_RESOURCE_PATH;
 import static com.tib.payments.model.payload.PaymentPayload.RESPONSE_PAYLOAD_PAYMENT_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,8 +64,17 @@ class PaymentResourceTest {
     @MockBean
     UpdatePayment updatePayment;
 
+    @MockBean
+    GetPayment paymentFetcher;
+
+    @MockBean
+    DeletePayment deletePayment;
+
     @Captor
     ArgumentCaptor<Payment> paymentArgumentCaptor;
+
+    @Captor
+    ArgumentCaptor<PaymentPayload> paymentPayloadArgumentCaptor;
 
     @Value("${application.domain}")
     String applicationDomain;
@@ -73,7 +86,6 @@ class PaymentResourceTest {
 
         Payment newPayment = mock(Payment.class);
 
-//        when(paymentRepository.save(paymentArgumentCaptor.capture())).thenReturn(newPayment);
         when(createPayment.execute(paymentArgumentCaptor.capture())).thenReturn(newPayment);
         when(newPayment.getId()).thenAnswer((Answer<String>) invocation -> paymentArgumentCaptor.getValue().getId());
 
@@ -92,7 +104,7 @@ class PaymentResourceTest {
         Payment payment1 = TestData.createNewPayment(UUID.randomUUID().toString());
         Payment payment2 = TestData.createNewPayment(UUID.randomUUID().toString());
 
-        when(paymentRepository.findAll()).thenReturn(asList(payment1, payment2));
+        when(paymentFetcher.getAllPayments()).thenReturn(asList(payment1, payment2));
 
         mockMvc.perform(get(PAYMENTS_RESOURCE_PATH)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
@@ -193,7 +205,7 @@ class PaymentResourceTest {
     void shouldReturnPaymentForId() throws Exception {
         Payment payment = TestData.createNewPayment(UUID.randomUUID().toString());
 
-        when(paymentRepository.findById(payment.getId())).thenReturn(Optional.of(payment));
+        when(paymentFetcher.getPayment(payment.getId())).thenReturn(payment);
 
         mockMvc.perform(get(PAYMENTS_RESOURCE_PATH + "/" + payment.getId())
             .contentType(MediaType.APPLICATION_JSON_UTF8))
@@ -248,7 +260,7 @@ class PaymentResourceTest {
     @Test
     void shouldReturn404WheResourceIsNotFound() throws Exception {
         String paymentId = UUID.randomUUID().toString();
-        when(paymentRepository.findById(paymentId)).thenReturn(Optional.empty());
+        doThrow(IllegalArgumentException.class).when(paymentFetcher).getPayment(paymentId);
 
         mockMvc.perform(get(RESPONSE_PAYLOAD_PAYMENT_ID + "/" + paymentId)
             .contentType(MediaType.APPLICATION_JSON_UTF8))
@@ -256,24 +268,16 @@ class PaymentResourceTest {
     }
 
     @Test
-    void shouldCreateNewPaymentForPutWhenNoPaymentExists() throws Exception {
+    void shouldReturn400ForPaymentUpdatesWhenNoPaymentExists() throws Exception {
         String requestPayload = new String(Files.readAllBytes(Paths.get(
             Objects.requireNonNull(PaymentResourceTest.class.getClassLoader().getResource("test-data/sample-create-payment.json")).toURI())));
 
-        Payment newPayment = mock(Payment.class);
-
-//        when(paymentRepository.save(paymentArgumentCaptor.capture())).thenReturn(newPayment);
-        when(createPayment.execute(paymentArgumentCaptor.capture())).thenReturn(newPayment);
-        when(newPayment.getId()).thenAnswer((Answer<String>) invocation -> paymentArgumentCaptor.getValue().getId());
+        doThrow(IllegalArgumentException.class).when(updatePayment).execute(any(PaymentPayload.class));
 
         mockMvc.perform(put(PAYMENTS_RESOURCE_PATH)
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .content(requestPayload))
-            .andExpect(status().isCreated())
-            .andExpect(header().string("Location", applicationDomain + PAYMENTS_RESOURCE_PATH + newPayment.getId()))
-            .andExpect(jsonPath("$." + RESPONSE_PAYLOAD_PAYMENT_ID).value(paymentArgumentCaptor.getValue().getId()));
-
-        assertThat(paymentArgumentCaptor.getValue().getAmount()).isEqualTo(Money.moneyValue("100.21", Currency.getInstance(Locale.UK)));
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -284,7 +288,6 @@ class PaymentResourceTest {
         Payment existingPayment = mock(Payment.class);
         Payment updatedPayment = mock(Payment.class);
 
-        when(paymentRepository.findById("4ee3a8d8-ca7b-4290-a52c-dd5b6165ec43")).thenReturn(Optional.of(existingPayment));
         when(existingPayment.getId()).thenReturn("4ee3a8d8-ca7b-4290-a52c-dd5b6165ec43");
         when(existingPayment.updatePayment(paymentArgumentCaptor.capture())).thenReturn(updatedPayment);
 
@@ -293,8 +296,7 @@ class PaymentResourceTest {
             .content(requestPayload))
             .andExpect(status().isNoContent());
 
-//        verify(paymentRepository).save(updatedPayment);
-        verify(updatePayment).execute(updatedPayment);
+        verify(updatePayment).execute(paymentPayloadArgumentCaptor.capture());
     }
 
     @Test
@@ -306,7 +308,18 @@ class PaymentResourceTest {
             .contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(status().isNoContent());
 
-        verify(paymentRepository).deleteById(paymentId);
+        verify(deletePayment).execute(paymentId);
+    }
+
+    @Test
+    void shouldReturn404ForNonExistingPaymentOnDelete() throws Exception {
+        String paymentId = UUID.randomUUID().toString();
+
+        doThrow(IllegalArgumentException.class).when(deletePayment).execute(paymentId);
+
+        mockMvc.perform(delete(PAYMENTS_RESOURCE_PATH + "/" + paymentId)
+            .contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest());
     }
 
 }
